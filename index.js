@@ -20,6 +20,10 @@ app.use((req, res, next) => {
     } else if (req.url.startsWith("/api/public")) {
         next();
     } else {
-        res.status(HttpStatus.BAD_REQUEST).json({ message: "Bad request; should start with \"/api/secure\" or \"/api/public\"" });
+        res.status(HttpStatus.BAD_REQUEST).json({ message: "Bad request; endpoint should start with \"/api/secure\" or \"/api/public\"" });
     }
+});
+
+app.listen(process.env.PORT, () => {
+    console.log("API Gateway is running on port: " + process.env.PORT);
 });
