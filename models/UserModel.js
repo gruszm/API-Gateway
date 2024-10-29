@@ -1,9 +1,8 @@
 const mongoose = require('mongoose');
-const AutoIncrement = require("mongoose-sequence")(mongoose);
+// const AutoIncrement = require("mongoose-sequence")(mongoose);
 
 const userSchema = new mongoose.Schema(
     {
-        _id: Number,
         email:
         {
             type: String,
@@ -27,10 +26,9 @@ const userSchema = new mongoose.Schema(
             required: true,
             trim: true
         }
-    },
-    { _id: false }
+    }
 );
 
-userSchema.plugin(AutoIncrement);
+// userSchema.plugin(AutoIncrement);
 
 module.exports = mongoose.model("User", userSchema);
