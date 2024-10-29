@@ -3,33 +3,18 @@ const bcrypt = require('bcrypt');
 const jsonwebtoken = require('jsonwebtoken');
 
 async function register(email, password) {
-    try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({ email: email, password: hashedPassword });
-        const userDb = await newUser.save();
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({ email: email, password: hashedPassword });
+    const userDb = await newUser.save();
 
-        return userDb;
-    } catch (error) {
-        console.log("Error on registering a user: " + error.message);
-
-        return null;
-    }
+    return userDb;
 }
 
 async function login(email, password) {
     const userDb = await getUserByEmail(email);
 
-    if (!userDb) {
-        console.log("User with email", email, "does not exist.");
-
-        return null;
-    }
-
-    if (!bcrypt.compareSync(password, userDb.password)) {
-        console.log("Wrong password.");
-
-        return null;
-    }
+    if (!userDb) throw new Error("User with email " + email + " does not exist.");
+    if (!bcrypt.compareSync(password, userDb.password)) throw new Error("Wrong password.");
 
     const payload = { id: userDb._id, email: email };
     const tokenOptions = { expiresIn: "7 days" };
@@ -46,7 +31,7 @@ async function getUserByEmail(email) {
     return await User.findOne({ email: email });
 }
 
-exports = {
+module.exports = {
     register: register,
     login: login,
     getUserById: getUserById,

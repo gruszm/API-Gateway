@@ -1,28 +1,15 @@
-const app = require("express")();
-const createProxyMiddleware = require("http-proxy-middleware").createProxyMiddleware;
-const jsonwebtoken = require("jsonwebtoken");
-const HttpStatus = require("http-status-codes").StatusCodes;
+const express = require("express");
+const AuthMiddleware = require("./middlewares/AuthMiddleware.js");
 
-app.use((req, res, next) => {
-    if (req.url.startsWith("/api/secure")) {
-        const token = req.headers["authorization"] && req.headers["authorization"].split(" ")[1];
+const app = express();
 
-        if (!token) res.status(HttpStatus.UNAUTHORIZED).json({ message: "Authorization token required" });
+app.use(express.json());
 
-        jsonwebtoken.verify(token, process.env.SECRET_KEY, (error, decoded) => {
-            if (error) res.status(HttpStatus.UNAUTHORIZED).json({ message: "Authorization error" });
+app.post("/api/register", async (req, res) => {
 
-            req.headers.user = decoded;
-            delete req.headers["authorization"];
-
-            next();
-        });
-    } else if (req.url.startsWith("/api/public")) {
-        next();
-    } else {
-        res.status(HttpStatus.BAD_REQUEST).json({ message: "Bad request; endpoint should start with \"/api/secure\" or \"/api/public\"" });
-    }
 });
+
+app.use(AuthMiddleware);
 
 app.listen(process.env.PORT, () => {
     console.log("API Gateway is running on port: " + process.env.PORT);

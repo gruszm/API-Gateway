@@ -33,4 +33,4 @@ const userSchema = new mongoose.Schema(
 
 userSchema.plugin(AutoIncrement);
 
-exports = mongoose.model("User", userSchema);
+module.exports = mongoose.model("User", userSchema);
