@@ -1,9 +1,9 @@
 const mongoose = require("mongoose");
 
-async function connect() {
-    try {
-        const url = `mongodb://${process.env.DB_SERVICE_NAME}:${process.env.PORT_DB}/users`;
+async function connect(hostname, port) {
+    const url = `mongodb://${hostname}:${port}/users`;
 
+    try {
         await mongoose.connect(url);
 
         console.log("Successfully connected to database on url " + url);

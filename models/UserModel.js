@@ -9,17 +9,7 @@ const userSchema = new mongoose.Schema(
             required: true,
             unique: true,
             lowercase: true,
-            trim: true,
-            validate: {
-                validator: function (text) {
-                    let valid = true;
-
-                    valid &= text.indexOf("@") > 0;
-                    valid &= text.endsWith(".com");
-
-                    return valid;
-                }
-            }
+            trim: true
         },
         password: {
             type: String,
