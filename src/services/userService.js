@@ -1,4 +1,4 @@
-import * as User from "../models/userModel.js";
+import User from "../models/userModel.js";
 import * as bcrypt from "bcrypt";
 import { AlreadyExistsError, BadCredentialsError, InvalidEmailError, NotFoundError, PasswordLengthError } from "../errors/customErrors.js";
 import * as emailvalidator from "email-validator";
