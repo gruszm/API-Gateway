@@ -1,5 +1,5 @@
 import express from "express";
-import AuthMiddleware from "./middlewares/authMiddleware.js";
+import { AuthHandler as AuthMiddleware } from "./middlewares/authMiddleware.js";
 import * as MongoConnection from "./config/db.js";
 import { StatusCodes as HttpStatus } from "http-status-codes";
 import * as UserService from "./services/userService.js";

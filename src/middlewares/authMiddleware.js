@@ -28,4 +28,4 @@ const AuthHandler = (req, res, next) => {
     }
 }
 
-export default AuthHandler;
+export { AuthHandler };
