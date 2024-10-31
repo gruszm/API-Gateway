@@ -2,17 +2,18 @@ import User from "../models/userModel.js";
 import * as bcrypt from "bcrypt";
 import { AlreadyExistsError, BadCredentialsError, InvalidEmailError, NotFoundError, PasswordLengthError } from "../errors/customErrors.js";
 import * as emailvalidator from "email-validator";
-import * as jsonwebtoken from "jsonwebtoken";
+import jsonwebtoken from "jsonwebtoken";
+const { sign } = jsonwebtoken;
 
 const MIN_PASSWORD_LENGTH = 8;
 
 async function register(email, password) {
     if (!email) throw new BadCredentialsError("Email must be provided.");
     if (!password) throw new BadCredentialsError("Password must be provided.");
-    if (!emailvalidator.validate(email)) throw new InvalidEmailError("Email invalid.");
+    if (!emailvalidator.validate(email.trim())) throw new InvalidEmailError(`Email ${email} is invalid.`);
     if (password.length < MIN_PASSWORD_LENGTH) throw new PasswordLengthError(`Provided password is too short. The minimum length is ${MIN_PASSWORD_LENGTH}`);
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password.trim(), 10);
     const newUser = new User({ email: email, password: hashedPassword });
 
     try {
@@ -38,7 +39,7 @@ async function login(email, password) {
 
     const payload = { id: userDb._id, email: email };
     const tokenOptions = { expiresIn: "7 days" };
-    const token = jsonwebtoken.sign(payload, process.env.SECRET_KEY, tokenOptions);
+    const token = sign(payload, process.env.SECRET_KEY, tokenOptions);
 
     return token;
 }
