@@ -38,10 +38,10 @@ class PasswordLengthError extends Error {
     }
 }
 
-module.exports = {
-    NotFoundError: NotFoundError,
-    BadCredentialsError: BadCredentialsError,
-    AlreadyExistsError: AlreadyExistsError,
-    InvalidEmailError: InvalidEmailError,
-    PasswordLengthError: PasswordLengthError
-}
+export {
+    NotFoundError,
+    BadCredentialsError,
+    AlreadyExistsError,
+    InvalidEmailError,
+    PasswordLengthError
+};

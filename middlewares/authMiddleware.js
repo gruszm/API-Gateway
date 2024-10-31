@@ -1,5 +1,5 @@
-const HttpStatus = require("http-status-codes").StatusCodes;
-const jsonwebtoken = require('jsonwebtoken');
+import { StatusCodes as HttpStatus } from "http-status-codes";
+import * as jsonwebtoken from "jsonwebtoken";
 
 const AuthHandler = (req, res, next) => {
     if (req.url.startsWith("/api/secure")) {
@@ -28,4 +28,4 @@ const AuthHandler = (req, res, next) => {
     }
 }
 
-module.exports = AuthHandler;
+export default AuthHandler;

@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import * as mongoose from "mongoose";
 
 async function connect(hostname, port) {
     const url = `mongodb://${hostname}:${port}/users`;
@@ -14,6 +14,4 @@ async function connect(hostname, port) {
     }
 }
 
-module.exports = {
-    connect: connect
-}
+export { connect };

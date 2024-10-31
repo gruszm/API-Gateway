@@ -1,8 +1,8 @@
-const User = require("../models/userModel.js");
-const bcrypt = require('bcrypt');
-const jsonwebtoken = require('jsonwebtoken');
-const emailvalidator = require("email-validator");
-const { BadCredentialsError, NotFoundError, AlreadyExistsError, InvalidEmailError, PasswordLengthError } = require("../errors/customErrors.js");
+import * as User from "../models/userModel.js";
+import * as bcrypt from "bcrypt";
+import { AlreadyExistsError, BadCredentialsError, InvalidEmailError, NotFoundError, PasswordLengthError } from "../errors/customErrors.js";
+import * as emailvalidator from "email-validator";
+import * as jsonwebtoken from "jsonwebtoken";
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -51,9 +51,4 @@ async function getUserByEmail(email) {
     return await User.findOne({ email: email });
 }
 
-module.exports = {
-    register: register,
-    login: login,
-    getUserById: getUserById,
-    getUserByEmail: getUserByEmail
-};
+export { register, login, getUserById, getUserByEmail };

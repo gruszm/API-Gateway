@@ -1,9 +1,9 @@
-const express = require("express");
-const AuthMiddleware = require("./middlewares/authMiddleware.js");
-const MongoConnection = require("./config/db.js");
-const HttpStatus = require("http-status-codes").StatusCodes;
-const UserService = require("./services/userService.js");
-const { BadCredentialsError, NotFoundError, AlreadyExistsError, InvalidEmailError, PasswordLengthError } = require("./errors/customErrors.js");
+import express from "express";
+import AuthMiddleware from "./middlewares/authMiddleware.js";
+import * as MongoConnection from "./config/db.js";
+import { StatusCodes as HttpStatus } from "http-status-codes";
+import * as UserService from "./services/userService.js";
+import { BadCredentialsError, NotFoundError, AlreadyExistsError, InvalidEmailError, PasswordLengthError } from "./errors/customErrors.js";
 
 const app = express();
 

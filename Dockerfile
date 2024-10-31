@@ -4,7 +4,7 @@ WORKDIR /api_gateway
 
 COPY . .
 
-RUN npm install
+RUN npm install --production
 
 ARG PORT
 ARG PORT_DB
