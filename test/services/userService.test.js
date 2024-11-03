@@ -1,6 +1,6 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { login, register } from "../../src/services/userService.js";
+import { getUserByEmail, getUserById, login, register } from "../../src/services/userService.js";
 import { AlreadyExistsError, BadCredentialsError, InvalidEmailError, NotFoundError, PasswordLengthError } from "../../src/errors/customErrors.js";
 import * as mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
@@ -59,6 +59,12 @@ describe("User Service", () => {
             const userDb = await register(exEmail, exPassword);
 
             expect(compareSync(exPassword, userDb.password)).to.be.true;
+        });
+
+        it("should add a new User to the database with all letters lowercase", async () => {
+            const userDb = await register(exEmail.toUpperCase(), exPassword);
+
+            expect(userDb.email).to.be.equal(exEmail);
         });
 
         it("should add a new User to the database with trimmed email and password", async () => {
@@ -127,6 +133,48 @@ describe("User Service", () => {
             const verifiedToken = JWT.verify(token, process.env.SECRET_KEY);
 
             expect(verifiedToken.email).to.be.equal(exEmail);
+        });
+    });
+
+    describe("Get User by ID", () => {
+        let userDb;
+
+        before(async () => {
+            userDb = await register(exEmail, exPassword);
+
+            expect(userDb).to.not.be.null;
+        });
+
+        after(async () => {
+            await User.deleteMany();
+        });
+
+        it("should find user by ID in the database", async () => {
+            const foundUser = await getUserById(userDb._id);
+
+            expect(foundUser).to.not.be.null;
+            expect(foundUser._id.toHexString()).to.be.equal(userDb._id.toHexString());
+        });
+    });
+
+    describe("Get User by email", () => {
+        let userDb;
+
+        before(async () => {
+            userDb = await register(exEmail, exPassword);
+
+            expect(userDb).to.not.be.null;
+        });
+
+        after(async () => {
+            await User.deleteMany();
+        });
+
+        it("should find user by email in the database", async () => {
+            const foundUser = await getUserByEmail(exEmail);
+
+            expect(foundUser).to.not.be.null;
+            expect(foundUser._id.toHexString()).to.be.equal(userDb._id.toHexString());
         });
     });
 });
