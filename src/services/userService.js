@@ -45,7 +45,7 @@ async function login(email, password) {
 }
 
 async function getUserById(id) {
-    return await User.findById(id);
+    return await User.findOne({ id: id });
 }
 
 async function getUserByEmail(email) {

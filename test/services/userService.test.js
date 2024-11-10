@@ -27,7 +27,7 @@ describe("User Service", () => {
     const exEmail = "some_email@gmail.com";
     const exPassword = "password";
 
-    describe("Register function", () => {
+    describe("Register method", () => {
 
         afterEach(async () => {
             await User.deleteMany();
@@ -81,7 +81,7 @@ describe("User Service", () => {
         });
     });
 
-    describe("Login function", () => {
+    describe("Login method", () => {
 
         before(async () => {
             process.env.SECRET_KEY = "SECRET";
@@ -136,7 +136,7 @@ describe("User Service", () => {
         });
     });
 
-    describe("Get User by ID", () => {
+    describe("Get User by ID method", () => {
         let userDb;
 
         before(async () => {
@@ -150,14 +150,14 @@ describe("User Service", () => {
         });
 
         it("should find user by ID in the database", async () => {
-            const foundUser = await getUserById(userDb._id);
+            const foundUser = await getUserById(userDb.id);
 
             expect(foundUser).to.not.be.null;
-            expect(foundUser._id.toHexString()).to.be.equal(userDb._id.toHexString());
+            expect(foundUser.id).to.be.equal(userDb.id);
         });
     });
 
-    describe("Get User by email", () => {
+    describe("Get User by email method", () => {
         let userDb;
 
         before(async () => {
@@ -175,6 +175,7 @@ describe("User Service", () => {
 
             expect(foundUser).to.not.be.null;
             expect(foundUser._id.toHexString()).to.be.equal(userDb._id.toHexString());
+            expect(foundUser.id).to.be.equal(userDb.id);
         });
     });
 });
