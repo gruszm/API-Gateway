@@ -4,10 +4,9 @@ import * as MongoConnection from "./config/db.js";
 import { StatusCodes as HttpStatus } from "http-status-codes";
 import * as UserService from "./services/userService.js";
 import { BadCredentialsError, NotFoundError, AlreadyExistsError, InvalidEmailError, PasswordLengthError } from "./errors/customErrors.js";
+import { createProxyMiddleware } from 'http-proxy-middleware';
 
 const app = express();
-
-app.use(express.json());
 
 app.post("/api/register", async (req, res) => {
     try {
@@ -51,10 +50,12 @@ app.post("/api/login", async (req, res) => {
     }
 });
 
+app.use(createProxyMiddleware({ target: "http://products_service:8081", changeOrigin: true }));
+app.use(express.json());
 app.use(AuthMiddleware);
 
-MongoConnection.connect(process.env.DB_SERVICE_NAME, process.env.PORT_DB).then(() => {
-    app.listen(process.env.PORT, () => {
-        console.log("API Gateway is running on port: " + process.env.PORT);
+MongoConnection.connect(process.env.USERS_DB_SERVICE_NAME).then(() => {
+    app.listen(process.env.API_GATEWAY_PORT, () => {
+        console.log("API Gateway is running on port: " + process.env.API_GATEWAY_PORT);
     });
 });

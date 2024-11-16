@@ -24,7 +24,7 @@ const AuthHandler = (req, res, next) => {
     } else if (req.url.startsWith("/api/public")) {
         next();
     } else {
-        res.status(HttpStatus.BAD_REQUEST).json({ message: "Bad request; endpoint should start with \"/api/secure\" or \"/api/public\"" });
+        res.status(HttpStatus.BAD_REQUEST).json({ message: "Bad request; endpoint should start with \"/api/public\" or \"/api/secure\"" });
     }
 }
 
