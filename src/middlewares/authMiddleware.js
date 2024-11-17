@@ -21,10 +21,10 @@ const AuthHandler = (req, res, next) => {
 
             next();
         });
-    } else if (req.url.startsWith("/api/public")) {
+    } else if (req.url.startsWith("/api/public") || req.url.startsWith("/api/login") || req.url.startsWith("/api/register")) {
         next();
     } else {
-        res.status(HttpStatus.BAD_REQUEST).json({ message: "Bad request; endpoint should start with \"/api/public\" or \"/api/secure\"" });
+        res.status(HttpStatus.BAD_REQUEST).json({ message: "Bad request. Endpoint should start with \"/api/public\" or \"/api/secure\"." });
     }
 }
 
