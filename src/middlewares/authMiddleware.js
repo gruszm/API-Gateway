@@ -1,5 +1,5 @@
 import { StatusCodes as HttpStatus } from "http-status-codes";
-import * as jsonwebtoken from "jsonwebtoken";
+import jsonwebtoken from "jsonwebtoken";
 
 const AuthHandler = (req, res, next) => {
     if (req.url.startsWith("/api/secure")) {
