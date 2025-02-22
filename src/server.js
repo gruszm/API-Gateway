@@ -3,9 +3,11 @@ import { AuthHandler as AuthMiddleware } from "./middlewares/authMiddleware.js";
 import * as MongoConnection from "./config/db.js";
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { gatewayRouter } from "./routes/routes.js";
+import cors from "cors";
 
 const app = express();
 
+app.use(cors());
 app.use(AuthMiddleware);
 app.use(createProxyMiddleware({ pathFilter: ["/api/public/products", "/api/secure/products"], target: "http://products_service:8081", changeOrigin: true }));
 app.use(createProxyMiddleware({ pathFilter: ["/api/public/carts", "/api/secure/carts"], target: "http://carts-service:8082", changeOrigin: true }));
