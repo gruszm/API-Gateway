@@ -32,7 +32,7 @@ gatewayRouter.post("/api/login", async (req, res) => {
         const { email, password } = req.body;
         const token = await UserService.login(email, password);
 
-        res.status(HttpStatus.OK).json({ token: token });
+        res.status(HttpStatus.OK).json({ token: token, daysUntilExpires: 7 });
     } catch (error) {
 
         if (error instanceof InvalidEmailError) {
