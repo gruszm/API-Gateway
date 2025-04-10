@@ -2,6 +2,7 @@ import express from "express";
 import { StatusCodes as HttpStatus } from "http-status-codes";
 import * as UserService from "../services/userService.js";
 import { BadCredentialsError, NotFoundError, AlreadyExistsError, InvalidEmailError, PasswordLengthError } from "../errors/customErrors.js";
+import jsonwebtoken from "jsonwebtoken";
 
 const gatewayRouter = new express.Router();
 
@@ -46,6 +47,18 @@ gatewayRouter.post("/api/login", async (req, res) => {
         }
 
         res.json({ message: `${error.name}: ${error.message}` })
+    }
+});
+
+gatewayRouter.post("/api/validate", async (req, res) => {
+    try {
+        const { token } = req.body;
+
+        jsonwebtoken.verify(token, process.env.SECRET_KEY);
+
+        res.status(HttpStatus.OK).end();
+    } catch (error) {
+        res.status(HttpStatus.UNAUTHORIZED).end();
     }
 });
 
