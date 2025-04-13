@@ -37,7 +37,7 @@ async function login(email, password) {
     if (!userDb) throw new NotFoundError("User with email " + email + " does not exist.");
     if (!bcrypt.compareSync(password.trim(), userDb.password)) throw new BadCredentialsError("Wrong password.");
 
-    const payload = { id: userDb._id, email: email };
+    const payload = { id: userDb.id, email: email };
     const tokenOptions = { expiresIn: "7 days" };
     const token = sign(payload, process.env.SECRET_KEY, tokenOptions);
 

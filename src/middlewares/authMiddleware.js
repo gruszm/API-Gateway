@@ -16,7 +16,7 @@ const AuthHandler = (req, res, next) => {
                 return;
             }
 
-            req.headers.user = decoded;
+            req.headers["X-User"] = JSON.stringify(decoded);
             delete req.headers["authorization"];
 
             next();
