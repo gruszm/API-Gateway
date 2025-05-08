@@ -13,10 +13,17 @@ const userSchema = new mongoose.Schema(
             lowercase: true,
             trim: true
         },
-        password: {
+        password:
+        {
             type: String,
             required: true,
             trim: true
+        },
+        hasElevatedRights:
+        {
+            type: Boolean,
+            required: true,
+            default: false
         }
     }
 );
