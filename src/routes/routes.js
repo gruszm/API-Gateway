@@ -53,10 +53,9 @@ gatewayRouter.post("/api/login", async (req, res) => {
 gatewayRouter.post("/api/validate", async (req, res) => {
     try {
         const { token } = req.body;
+        const decoded = jsonwebtoken.verify(token, process.env.SECRET_KEY);
 
-        jsonwebtoken.verify(token, process.env.SECRET_KEY);
-
-        res.status(HttpStatus.OK).end();
+        res.json({ hasElevatedRights: decoded.hasElevatedRights });
     } catch (error) {
         res.status(HttpStatus.UNAUTHORIZED).end();
     }
