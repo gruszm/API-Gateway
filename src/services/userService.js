@@ -41,7 +41,7 @@ async function login(email, password) {
     const tokenOptions = { expiresIn: "7 days" };
     const token = sign(payload, process.env.SECRET_KEY, tokenOptions);
 
-    return token;
+    return { token, hasElevatedRights: userDb.hasElevatedRights };
 }
 
 async function getUserById(id) {

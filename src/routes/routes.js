@@ -31,9 +31,9 @@ gatewayRouter.post("/api/register", async (req, res) => {
 gatewayRouter.post("/api/login", async (req, res) => {
     try {
         const { email, password } = req.body;
-        const token = await UserService.login(email, password);
+        const loginResponse = await UserService.login(email, password);
 
-        res.status(HttpStatus.OK).json({ token: token, daysUntilExpires: 7 });
+        res.status(HttpStatus.OK).json({ token: loginResponse.token, daysUntilExpires: 7, hasElevatedRights: loginResponse.hasElevatedRights });
     } catch (error) {
 
         if (error instanceof InvalidEmailError) {
