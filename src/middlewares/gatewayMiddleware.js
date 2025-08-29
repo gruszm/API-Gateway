@@ -65,4 +65,4 @@ gatewayRouter.all("*", (res, req, next) => {
     next();
 });
 
-export { gatewayRouter };
+export { gatewayRouter as GatewayMiddleware };
