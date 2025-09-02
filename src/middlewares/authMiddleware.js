@@ -2,14 +2,7 @@ import { StatusCodes as HttpStatus } from "http-status-codes";
 import jsonwebtoken from "jsonwebtoken";
 
 const AuthHandler = (req, res, next) => {
-    const paths = ["/api/secure"];
-    let validPath = false;
-
-    for (const path of paths) {
-        validPath = (validPath === true) || req.url.startsWith(path);
-    }
-
-    if (validPath) {
+    if (req.url.startsWith("/api/secure")) {
         const token = req.headers["authorization"] && req.headers["authorization"].split(" ")[1];
 
         if (!token) {
@@ -28,12 +21,7 @@ const AuthHandler = (req, res, next) => {
 
             next();
         });
-    } else if (req.url.startsWith("/api/public")
-        || req.url.startsWith("/api/login")
-        || req.url.startsWith("/api/order")
-        || req.url.startsWith("/api/register")
-        || req.url.startsWith("/api/validate")
-    ) {
+    } else if (req.url.startsWith("/api/public")) {
         next();
     }
     else {

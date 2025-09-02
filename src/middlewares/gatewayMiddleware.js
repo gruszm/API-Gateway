@@ -6,9 +6,9 @@ import jsonwebtoken from "jsonwebtoken";
 
 const gatewayRouter = new express.Router();
 
-gatewayRouter.use(express.json());
+const jsonParser = express.json();
 
-gatewayRouter.post("/api/register", async (req, res) => {
+gatewayRouter.post("/api/register", jsonParser, async (req, res) => {
     try {
         const { email, password } = req.body;
         const userDb = await UserService.register(email, password);
@@ -28,7 +28,7 @@ gatewayRouter.post("/api/register", async (req, res) => {
     }
 });
 
-gatewayRouter.post("/api/login", async (req, res) => {
+gatewayRouter.post("/api/login", jsonParser, async (req, res) => {
     try {
         const { email, password } = req.body;
         const loginResponse = await UserService.login(email, password);
@@ -50,7 +50,7 @@ gatewayRouter.post("/api/login", async (req, res) => {
     }
 });
 
-gatewayRouter.post("/api/validate", async (req, res) => {
+gatewayRouter.post("/api/validate", jsonParser, async (req, res) => {
     try {
         const { token } = req.body;
         const decoded = jsonwebtoken.verify(token, process.env.SECRET_KEY);

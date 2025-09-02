@@ -4,13 +4,13 @@ import * as express from "express";
 
 const orderRouter = express.Router();
 
-orderRouter.use(express.json());
+const jsonParser = express.json();
 
 /**
  * @param {express.Request} req
  * @param {express.Response} res
  */
-orderRouter.post("/api/order", async (req, res) => {
+orderRouter.post("/api/order", jsonParser, async (req, res) => {
     const token = req.headers["authorization"] && req.headers["authorization"].split(" ")[1];
     let decodedUserHeader = null;
 

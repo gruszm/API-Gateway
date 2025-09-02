@@ -9,6 +9,7 @@ import { OrderRouter } from "./middlewares/orderMiddleware.js";
 const app = express();
 
 app.use(cors());
+app.use("/", GatewayRouter, OrderRouter);
 app.use(AuthMiddleware);
 app.use(createProxyMiddleware({ pathFilter: ["/api/public/products", "/api/secure/products"], target: "http://products_service:8081", changeOrigin: true }));
 app.use(createProxyMiddleware({ pathFilter: ["/api/public/carts", "/api/secure/carts"], target: "http://carts-service:8082", changeOrigin: true }));
@@ -17,7 +18,6 @@ app.use(createProxyMiddleware({
     pathFilter: ["/api/public/orders", "/api/secure/orders", "/api/public/delivery", "/api/secure/delivery"],
     target: "http://orders-service:8084", changeOrigin: true
 }));
-app.use("/", GatewayRouter, OrderRouter);
 
 MongoConnection.connect(process.env.USERS_DB_SERVICE_NAME).then(() => {
     app.listen(process.env.API_GATEWAY_PORT, () => {
