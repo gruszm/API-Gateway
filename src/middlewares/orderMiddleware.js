@@ -16,6 +16,7 @@ orderRouter.post("/api/order", async (req, res) => {
 
     const urlRetrieveCart = `http://carts-service:8082/api/secure/carts/user`;
     const urlRetrieveAddress = `http://profiles-service:8083/api/secure/profiles/addresses/${req.body.addressId}`;
+    const urlDecreaseStock = `http://products_service:8081/api/secure/products/decrease`;
 
     if (!token) {
         res.status(HttpStatus.UNAUTHORIZED).json({ message: "Authorization token required." });
@@ -132,7 +133,6 @@ orderRouter.post("/api/order", async (req, res) => {
         );
 
         const decreaseStockPromises = orderItems.map(async orderItem => {
-            const urlDecreaseStock = `http://products_service:8081/api/secure/products/decrease`;
             const body = { productId: orderItem.productId, amount: orderItem.quantity };
 
             // Return a promise
@@ -155,11 +155,27 @@ orderRouter.post("/api/order", async (req, res) => {
         const nok = [];
 
         if (!clearCartRes.ok) {
+            const errorObject = await clearCartRes.json();
+
             nok.push("Order created, but the cart could not be cleared");
+            nok.push(errorObject && errorObject.message);
         }
 
         if (decreaseStockResponses.some(r => !r.ok)) {
             nok.push("Order created, but the products in stock could not be decreased.");
+
+            const errorMessages = await Promise.all(
+                decreaseStockResponses.map(async r => {
+                    if (r.status === HttpStatus.BAD_REQUEST) {
+                        return;
+                    }
+
+                    const errObj = await r.json();
+                    return errObj && errObj.message;
+                })
+            );
+
+            nok.push(...errorMessages);
         }
 
         if (nok.length > 0) {
