@@ -94,7 +94,6 @@ orderRouter.post("/api/order", async (req, res) => {
 
         // Create the object with order details
         const orderDetails = {
-            userId: decodedUserHeader.id,
             address: addressData,
             products: orderItems
         };
@@ -113,7 +112,11 @@ orderRouter.post("/api/order", async (req, res) => {
         );
 
         if (!orderRes.ok) {
-            throw new Error("Order could not be created.");
+            const errorObject = (orderRes.status !== HttpStatus.NOT_FOUND) ? "" : await orderRes.json();
+
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: `Order could not be created. ${errorObject.message}` });
+
+            return;
         }
 
         const urlClearCart = `http://carts-service:8082/api/secure/carts`;
@@ -168,7 +171,7 @@ orderRouter.post("/api/order", async (req, res) => {
         res.status(HttpStatus.OK).send();
     }
     catch (error) {
-        console.error(`Error on endpoint: ${req.baseUrl + req.url}\n${error.message}`);
+        console.log(`Error on endpoint: ${req.baseUrl + req.url}\n${error.message}`);
 
         res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: "Internal server error." });
     }
@@ -177,9 +180,10 @@ orderRouter.post("/api/order", async (req, res) => {
 /**
  * @param {express.Request} req
  * @param {express.Response} res
+ * @param {express.NextFunction} next
  */
 orderRouter.all("*", (req, res, next) => {
     next();
 });
 
-export { orderRouter as OrderMiddleware };
+export { orderRouter as OrderRouter };
