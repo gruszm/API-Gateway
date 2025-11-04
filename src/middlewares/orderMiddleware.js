@@ -1,10 +1,16 @@
 import { StatusCodes as HttpStatus } from "http-status-codes";
 import jsonwebtoken from "jsonwebtoken";
 import * as express from "express";
+import Stripe from "stripe";
+import bodyParser from "body-parser";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const orderRouter = express.Router();
-
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const jsonParser = express.json();
+const rawBodyParser = bodyParser.raw({ type: "application/json" });
 
 /**
  * @param {express.Request} req
@@ -17,6 +23,8 @@ orderRouter.post("/api/order", jsonParser, async (req, res) => {
     const urlRetrieveCart = `http://carts-service:8082/api/secure/carts/user`;
     const urlRetrieveAddress = `http://profiles-service:8083/api/secure/profiles/addresses/${req.body.addressId}`;
     const urlDecreaseStock = `http://products_service:8081/api/secure/products/decrease`;
+    const urlCreateOrder = `http://orders-service:8084/api/secure/orders`;
+    const urlClearCart = `http://carts-service:8082/api/secure/carts`;
 
     if (!token) {
         res.status(HttpStatus.UNAUTHORIZED).json({ message: "Authorization token required." });
@@ -34,7 +42,6 @@ orderRouter.post("/api/order", jsonParser, async (req, res) => {
     }
 
     try {
-
         // Retrieve user's cart
         const cartData = await fetch(urlRetrieveCart,
             {
@@ -64,11 +71,11 @@ orderRouter.post("/api/order", jsonParser, async (req, res) => {
         // Map the cart entries to product IDs
         const productIds = cartData.cartEntries.map(entry => entry.productId);
 
-        // Create promises to retrieve the price for each product
-        const pricePromises = productIds.map(async productId => {
-            const urlRetrievePrice = `http://products_service:8081/api/public/products/price/${productId}`;
+        // Create promises to retrieve data of each product
+        const productPromises = productIds.map(async productId => {
+            const urlRetrieveProduct = `http://products_service:8081/api/public/products/${productId}`;
 
-            const res = await fetch(urlRetrievePrice,
+            const res = await fetch(urlRetrieveProduct,
                 {
                     method: "GET",
                     headers: {
@@ -82,14 +89,14 @@ orderRouter.post("/api/order", jsonParser, async (req, res) => {
         });
 
         // Wait until all the prices are retrieved (order is preserved)
-        const prices = await Promise.all(pricePromises);
+        const products = await Promise.all(productPromises);
 
         // Pair each product with its price and quantity
-        const orderItems = productIds.map((productId, i) => {
+        let orderItems = productIds.map((productId, i) => {
             return {
                 productId,
                 quantity: cartData.cartEntries[i].quantity,
-                price: prices[i]
+                price: products[i].price,
             };
         });
 
@@ -98,8 +105,6 @@ orderRouter.post("/api/order", jsonParser, async (req, res) => {
             address: addressData,
             products: orderItems
         };
-
-        const urlCreateOrder = `http://orders-service:8084/api/secure/orders`;
 
         const orderRes = await fetch(urlCreateOrder,
             {
@@ -120,7 +125,7 @@ orderRouter.post("/api/order", jsonParser, async (req, res) => {
             return;
         }
 
-        const urlClearCart = `http://carts-service:8082/api/secure/carts`;
+        const createdOrder = await orderRes.json();
 
         const clearCartRes = await fetch(urlClearCart,
             {
@@ -178,18 +183,160 @@ orderRouter.post("/api/order", jsonParser, async (req, res) => {
             nok.push(...errorMessages);
         }
 
+        // Attach the name for each order item
+        orderItems = orderItems.map((item, i) => {
+            return {
+                ...item,
+                name: products[i].name,
+                imageIds: products[i].imageIds
+            };
+        });
+
+        // Map the order items for Stripe
+        const line_items = orderItems.map(item => {
+            const price = Number(item.price) * 100;
+
+            return {
+                price_data: {
+                    currency: "PLN",
+                    product_data: {
+                        name: item.name,
+                        metadata: {
+                            product_id: item.productId,
+                            image_ids: item.imageIds.join(",")
+                        }
+                    },
+                    unit_amount: price
+                },
+                quantity: item.quantity,
+            };
+        });
+
+        // Create Stripe checkout session
+        const checkoutSession = await stripe.checkout.sessions.create(
+            {
+                mode: "payment",
+                line_items: line_items,
+                success_url: `${process.env.CLIENT_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+                cancel_url: `${process.env.CLIENT_URL}/cancel`,
+                customer_email: decodedUserHeader.email,
+                metadata: { orderId: createdOrder.id },
+                allow_promotion_codes: true
+            },
+            {
+                idempotencyKey: `create-checkout-${createdOrder.id}`
+            }
+        );
+
         if (nok.length > 0) {
-            res.status(HttpStatus.CREATED).json({ message: nok.join("; ") });
+            res.status(HttpStatus.CREATED).json({ message: nok.join("; "), url: checkoutSession.url });
 
             return;
         }
 
-        res.status(HttpStatus.OK).send();
+        res.status(HttpStatus.OK).json({ url: checkoutSession.url });
     }
     catch (error) {
         console.log(`Error on endpoint: ${req.baseUrl + req.url}\n${error.message}`);
 
         res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: "Internal server error." });
+    }
+});
+
+/**
+ * @param {express.Request} req
+ * @param {express.Response} res
+ */
+orderRouter.post("/api/stripe/webhook", rawBodyParser, async (req, res) => {
+    const signature = req.headers["stripe-signature"];
+    let event;
+
+    try {
+        event = stripe.webhooks.constructEvent(req.body, signature, process.env.STRIPE_WEBHOOK_SECRET);
+    } catch (err) {
+        console.error("Webhook signature verification failed.", err.message);
+        res.status(HttpStatus.BAD_REQUEST).send(`Webhook Error: ${err.message}`);
+
+        return;
+    }
+
+    switch (event.type) {
+        case "checkout.session.completed": {
+            const session = event.data.object;
+            const updateStatusUrl = `http://orders-service:8084/api/secure/orders/status`;
+
+            console.log(`Payment succeeded for order ${session.metadata.orderId}`);
+
+            await fetch(updateStatusUrl,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(
+                        {
+                            hasElevatedRights: true,
+                            orderId: session.metadata.orderId,
+                            status: "paid"
+                        }
+                    )
+                }).then(async res => {
+                    if (!res.ok) {
+                        const errorObject = await res.json();
+
+                        console.log(`Error while updating order status: ${errorObject.message}`);
+                    }
+                }).catch(error => {
+                    console.log(`Error while updating order status: ${error.message}`);
+                });
+
+            break;
+        }
+
+        default:
+            console.log(`Unhandled event type: ${event.type}`);
+    }
+
+    res.status(HttpStatus.OK).end();
+});
+
+/**
+ * @param {express.Request} req
+ * @param {express.Response} res
+ */
+orderRouter.get("/api/stripe/session/:id", async (req, res) => {
+    try {
+        console.log(req.params.id);
+
+        const session = await stripe.checkout.sessions.retrieve(req.params.id,
+            {
+                expand: ["line_items.data.price.product"]
+            }
+        );
+
+        console.log(JSON.stringify(session.line_items));
+
+
+        const data = {
+            orderId: session.metadata?.orderId,
+            products: session.line_items?.data.map(line_item => {
+                return {
+                    productId: line_item.price.product.metadata.productId || line_item.price.product.metadata.product_id,
+                    name: line_item.price.product.name,
+                    quantity: line_item.quantity,
+                    price: line_item.price.unit_amount,
+                    amount_total: line_item.amount_total,
+                    imageIds: line_item.price.product.metadata.image_ids.split(",")
+                };
+            })
+        };
+
+        res.status(HttpStatus.OK).json(data);
+    }
+    catch (error) {
+        console.log(`Error on endpoint: ${req.baseUrl + req.url}\n${error.message}`);
+
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: `Internal server error. ${error.message}` });
     }
 });
 

@@ -5,10 +5,13 @@ import { createProxyMiddleware } from 'http-proxy-middleware';
 import { GatewayRouter } from "./middlewares/gatewayMiddleware.js";
 import cors from "cors";
 import { OrderRouter } from "./middlewares/orderMiddleware.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 
-app.use(cors());
+app.use(cors({ origin: process.env.CLIENT_URL }));
 app.use("/", GatewayRouter, OrderRouter);
 app.use(AuthMiddleware);
 app.use(createProxyMiddleware({ pathFilter: ["/api/public/products", "/api/secure/products"], target: "http://products_service:8081", changeOrigin: true }));

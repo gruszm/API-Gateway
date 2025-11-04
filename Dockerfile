@@ -6,14 +6,4 @@ COPY . .
 
 RUN npm install --production
 
-ARG USERS_DB_SERVICE_NAME
-ARG API_GATEWAY_PORT
-
-# temporary solution; TODO: create secrets file
-ARG SECRET_KEY
-
-ENV API_GATEWAY_PORT=${API_GATEWAY_PORT} USERS_DB_SERVICE_NAME=${USERS_DB_SERVICE_NAME} SECRET_KEY=${SECRET_KEY}
-
-EXPOSE ${API_GATEWAY_PORT}
-
 CMD [ "npm", "start" ]
